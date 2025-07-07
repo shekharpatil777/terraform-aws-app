@@ -1,0 +1,112 @@
+Of course. Here is a complete guide with the necessary Terraform code and step-by-step instructions to build the specified AWS infrastructure.
+
+Project Overview
+This project provisions a secure, scalable, and highly available two-VPC architecture on AWS.
+
+Bastion VPC: A dedicated VPC to host a bastion (jump) host, providing a secure, single point of entry to your private application resources.
+
+Application VPC: A second VPC that houses the core application, including auto-scaling web servers, a Network Load Balancer, and an S3 bucket for configurations.
+
+Connectivity & Security: The VPCs communicate privately via a Transit Gateway. VPC Flow Logs are enabled for network monitoring, and security groups are tightly configured to restrict traffic based on the principle of least privilege.
+
+Terraform Project Structure
+For clarity and maintainability, I'll structure the Terraform code into logical files.
+
+.
+├── 1_network.tf
+├── 2_logging.tf
+├── 3_bastion.tf
+├── 4_application.tf
+├── 5_dns.tf
+├── main.tf
+├── variables.tf
+└── outputs.tf
+Below is the complete, self-contained code for each file.
+Terraform: AWS HA Bastion & App Infrastructure
+6 Jul, 19:06
+
+ Try again without Canvas 
+
+Deployment Steps
+Follow these steps to deploy your infrastructure.
+
+Step 1: Prerequisites
+Install Terraform: If you haven't already, install Terraform on your local machine.
+
+Configure AWS Credentials: Ensure your AWS CLI is configured with credentials that have sufficient permissions to create the resources. You can do this by running aws configure.
+
+Create an SSH Key Pair: Generate an SSH key pair for accessing your EC2 instances.
+
+Bash
+
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/webapp-key
+This command creates webapp-key (private key) and webapp-key.pub (public key) in your ~/.ssh/ directory. Keep the private key secure.
+
+Route 53 Hosted Zone: You must have a registered domain and a public hosted zone for it in Amazon Route 53.
+
+Step 2: Set Up Your Project
+Create a new directory for your project and save all the Terraform code blocks from above into their respective .tf files inside this directory.
+
+Create a file named terraform.tfvars in the same directory. This file will hold the specific values for your variables.
+
+terraform.tfvars
+
+Terraform
+
+# --- General Configuration ---
+aws_region = "us-east-1"
+
+# --- EC2 Key Pair Configuration ---
+# This should be the name you want for the key in AWS
+key_name = "webapp-key"
+# Path to the PUBLIC key file you created in the prerequisites
+public_key_path = "~/.ssh/webapp-key.pub"
+
+# --- S3 and DNS Configuration ---
+# Replace with a globally unique name for your bucket
+s3_bucket_name = "your-unique-app-config-bucket-12345"
+# Replace with your domain managed in Route 53
+domain_name = "yourdomain.com"
+Important: Replace the placeholder values with your actual information. The S3 bucket name must be globally unique.
+
+Step 3: Deploy the Infrastructure
+Initialize Terraform: Open a terminal in your project directory and run:
+
+Bash
+
+terraform init
+This command downloads the necessary AWS provider plugins.
+
+Plan the Deployment: Run the plan command to see what resources Terraform will create.
+
+Bash
+
+terraform plan
+Review the output carefully to ensure it matches your expectations.
+
+Apply the Configuration: If the plan is correct, deploy the infrastructure:
+
+Bash
+
+terraform apply
+Terraform will prompt you for confirmation. Type yes and press Enter. The process will take several minutes as it provisions all the resources.
+
+Step 4: Accessing Your Infrastructure
+Once the apply command completes, Terraform will display the outputs.
+
+Connect to the Bastion Host:
+Use the bastion_host_public_ip output and your private key to SSH into the bastion.
+
+Bash
+
+ssh -i ~/.ssh/webapp-key ec2-user@<BASTION_PUBLIC_IP>
+Access the Application:
+Open a web browser and navigate to the URL provided in the application_url output (e.g., http://app.yourdomain.com). It may take a few minutes for the DNS to propagate and the instances to become healthy. You should see the welcome page served by one of your application instances.
+
+Connect to Private App Instances (from Bastion):
+While SSH'd into the bastion, you can use Session Manager (as configured by the IAM role) to connect to your private instances without needing to manage SSH keys on them. First, you'll need the instance IDs, which you can find in the EC2 console.
+
+Bash
+
+# On your local machine, NOT the bastion
+aws ssm start-session --target <PRIVAT
